@@ -5,19 +5,27 @@ import numpy as np
 from player import Player 
 
 
-rows, cols = 7, 8
+
 
 class Random(Player):
     '''
     Drop the disc randomly on any of the columns of the board
     '''
     
-    def __init__(self, rows=rows, columns=cols):
-        self.rows=rows
-        self.cols=columns
+    def __init__(self, rows, cols, connect_number, 
+                 timeout_setup, timeout_move, max_invalid_moves, 
+                 cylinder):
+        self.rows = rows
+        self.cols = cols
+        self.connect_number = connect_number
+        self.timeout_setup = timeout_setup
+        self.timeout_move = timeout_move
+        self.max_invalid_moves = max_invalid_moves
+        self.cylinder = cylinder
 
-    def setup(self):
-        pass
+
+    def setup(self,piece_color):
+        self.piece_color=piece_color
 
     def play(self, board: np.ndarray) -> int:
         return np.random.randint(self.cols)
@@ -27,11 +35,19 @@ class SmartRandom(Player):
     '''
     Randomly drop the disc into any column on the board that is not full.
     '''
-    def __init__(self, rows=rows, columns=cols):
-        self.rows=rows
-        self.cols=columns
+    def __init__(self, rows, cols, connect_number, 
+                 timeout_setup, timeout_move, max_invalid_moves, 
+                 cylinder):
+        self.rows = rows
+        self.cols = cols
+        self.connect_number = connect_number
+        self.timeout_setup = timeout_setup
+        self.timeout_move = timeout_move
+        self.max_invalid_moves = max_invalid_moves
+        self.cylinder = cylinder
 
-    def setup(self):
+    def setup(self,piece_color):
+        self.piece_color=piece_color
         self.moves=np.arange(self.cols)
 
     def play(self, board: np.ndarray) -> int:
@@ -48,12 +64,20 @@ class LazySmartRandom(Player):
     Similar to SmartRandom, but wait for some time before each move and during the setup.
     '''
 
-    def __init__(self, rows=rows, columns=cols):
-        self.rows=rows
-        self.cols=columns
+    def __init__(self, rows, cols, connect_number, 
+                 timeout_setup, timeout_move, max_invalid_moves, 
+                 cylinder):
+        self.rows = rows
+        self.cols = cols
+        self.connect_number = connect_number
+        self.timeout_setup = timeout_setup
+        self.timeout_move = timeout_move
+        self.max_invalid_moves = max_invalid_moves
+        self.cylinder = cylinder
 
     
-    def setup(self):
+    def setup(self,piece_color):
+        self.piece_color=piece_color
         self.moves=np.arange(self.cols)
         time.sleep(0.99)
         print(self.__class__.__name__ + ': ...Hmm?')
@@ -73,13 +97,20 @@ class DropLowest(Player):
     '''
     Drop the disc in the column with fewer discs, breaking ties by choosing the leftmost column
     '''
-    def __init__(self, rows=rows, columns=cols):
-        self.rows=rows
-        self.cols=columns
+    def __init__(self, rows, cols, connect_number, 
+                 timeout_setup, timeout_move, max_invalid_moves, 
+                 cylinder):
+        self.rows = rows
+        self.cols = cols
+        self.connect_number = connect_number
+        self.timeout_setup = timeout_setup
+        self.timeout_move = timeout_move
+        self.max_invalid_moves = max_invalid_moves
+        self.cylinder = cylinder
     
     
-    def setup(self):
-        pass
+    def setup(self,piece_color):
+        self.piece_color=piece_color
 
     def play(self, board: np.ndarray) -> int:
         col_filled=self.cols_filled(board)
@@ -88,11 +119,3 @@ class DropLowest(Player):
 
     def cols_filled(self, board: np.ndarray) -> np.ndarray:
         return np.sum(board!=0,axis=0)
-
-
-
-
-
-
-
-
