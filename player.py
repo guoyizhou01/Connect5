@@ -1,5 +1,5 @@
 import numpy as np
-from anytree import Node, RenderTree
+# from anytree import Node, RenderTree
 
 ROWS, COLS = 7, 8
 DIRECTIONS = [(1,1),(1,0),(1,-1),(0,1),(0,-1),(-1,1),(-1,0),(-1,-1)]
@@ -12,10 +12,35 @@ CYLINDER=False
 timed_out = False 
 
 # [2-connect,3-connect,4-connect,5-connect,lenient-5-connect]
-EVAL_WEIGHT = [1,3,6,30,3]
+EVAL_WEIGHT = [1,3,6,80,6]
 
 
+class TreeNode:
+    def __init__(self,board: np.ndarray ,value=-99999, parent = None,isMAX = True):
+        self.value = value
+        self.children = [None,None,None,None,None,None,None,None]
+        self.parent = parent
+        self.isMAX = isMAX
+        self.board = board
 
+    # def make_child(self,i,value):
+    #     self.children[i] = TreeNode(value,self,not isMAX)
+    def drop_piece(self,board:np.ndarray,c,player):
+        result = ROWS
+        for i in range(ROWS):
+            if board[i][c] != 0:
+                result = i
+                break
+        if result > 0:
+            board[result-1][c] = player
+        return board
+
+    def make_children(self,player):
+        for i in range(COLS):
+            new_board = self.board.copy()
+            new_board = self.drop_piece(new_board,i,player)
+            self.children[i] = TreeNode(new_board,parent=self,isMAX=not self.isMAX)
+            # print(self.children[i].board)
 
 class Player:
     
@@ -54,7 +79,7 @@ class Player:
     def check_direction(self, player, c, r, dc, dr, board: np.ndarray):
         for i in range(5):
             # check if out of bound or is opponent/empty
-            if r+dr*i > self.rows or r+dr*i < 0 or c+dc*i > self.cols or c+dc*i < 0 or board[r+dr*i][c+dc*i] != player:
+            if r+dr*i < 0 or c+dc*i < 0 or board[(r+dr*i)%self.rows][(c+dc*i)%self.cols] != player:
                 return i
         return 5
 
@@ -64,7 +89,7 @@ class Player:
     def check_direction_lenient(self, player, c, r, dc, dr, board: np.ndarray):
         for i in range(5):
             # check if out of bound or is opponent
-            if r+dr*i > self.rows or r+dr*i < 0 or c+dc*i > self.cols or c+dc*i < 0 or board[r+dr*i][c+dc*i] != 0-player:
+            if r+dr*i < 0 or c+dc*i < 0 or (not board[(r+dr*i)%self.rows][(c+dc*i)%self.cols] != 0-player):
                 return i
         return 5
 
@@ -73,11 +98,12 @@ class Player:
     # return: an array with index 0 to 5 with count
     def count_connect(self,player,board: np.ndarray):
         result = [0,0,0,0,0,0]
-        for i in range(self.rols):
+        for i in range(self.rows):
             for j in range(self.cols):
                 # do not need to check all 8 directions
                 for dc,dr in DIRECTIONS[:4]:
-                    ++result[self.check_direction(player,i,j,dc,dr,board)]
+                    # print('a',end=' ')
+                    result[self.check_direction(player,i,j,dc,dr,board)] += 1
         # adjust result
         # ****************************** WARNING *********************************
         # * CODE FOR ADJUSTING LENIENT VERSION (IF ANY) NEED TO BE DIFFERENT !!! *
@@ -87,7 +113,7 @@ class Player:
         for i in [5,4,3,2]:
             for j in range(1,i):
                 result[j] -= result[i]
-
+        # print(result,end=' ')
         return result
 
     # count all connects of a given player
@@ -96,41 +122,15 @@ class Player:
     # return: an array with index 0 to 5 with count
     def count_connect_lenient(self,player,board: np.ndarray):
         result = [0,0,0,0,0,0]
-        for i in range(self.rols):
+        for i in range(self.rows):
             for j in range(self.cols):
                 # do not need to check all 8 directions
                 for dc,dr in DIRECTIONS[:4]:
-                    ++result[self.check_direction_lenient(player,i,j,dc,dr,board)]
-
+                    # print('b',end=' ')
+                    result[self.check_direction_lenient(player,i,j,dc,dr,board)] += 1
+        # print(result,end=' ')
         return result
 
-    
-
-    class TreeNode:
-        def __init__(self,board: np.ndarray ,value=-99999, parent = None,isMAX = True):
-            self.value = value
-            self.children = [None,None,None,None,None,None,None,None]
-            self.parent = parent
-            self.isMAX = isMAX
-            self.board = board
-
-        # def make_child(self,i,value):
-        #     self.children[i] = TreeNode(value,self,not isMAX)
-        def drop_piece(self,board:np.ndarray,c,player):
-            result = -1
-            for i in range(ROWS):
-                if board[i][c] != 0:
-                    result = i
-                    break
-            if result > 0:
-                board[result-1][c] = player
-            return board
-
-        def make_children(self,player):
-            for i in range(self.COLS):
-                new_board = board.copy()
-                new_board = self.drop_piece(new_board,i,player)
-                children[i] = TreeNode(new_board,parent=self,isMAX=not self.isMAX)
 
     def evaluate(self,board: np.ndarray):
         eval_self = 0
@@ -144,8 +144,8 @@ class Player:
         connect_lenient_opponent = self.count_connect_lenient(0-self.color,board)
         evel_opponent += EVAL_WEIGHT[0]*connect_opponent[2] + EVAL_WEIGHT[1]*connect_opponent[3] + \
                             EVAL_WEIGHT[2]*connect_opponent[4] + EVAL_WEIGHT[3]*connect_opponent[5] + EVAL_WEIGHT[3]*connect_lenient_opponent[5]
-
-        return eval_self-eval_opponent
+        # print(f'board: {self.board} \n  self: {connect_self}, {connect_lenient_self[5]}, opponent: {connect_opponent}, {connect_lenient_opponent[5]}')
+        return eval_self-evel_opponent
 
     def minimax(self, node, depth, alpha, beta):
         if depth == 0:
@@ -154,8 +154,8 @@ class Player:
         if node.isMAX:
             max_eval = -99999
             for child in node.children:
-                child.make_children(self.color)
-                evaluation = self.minimax(child,depth-1,False,alpha,beta)
+                child.make_children(1-self.color)
+                evaluation = self.minimax(child,depth-1,alpha,beta)
                 max_eval = max(evaluation,max_eval)
                 alpha = max(alpha,evaluation)
                 if beta <= alpha:
@@ -165,8 +165,8 @@ class Player:
         else:
             min_eval = 99999
             for child in node.children:
-                child.make_children(1-self.color)
-                evaluation = self.minimax(child,depth-1,True,alpha,beta)
+                child.make_children(self.color)
+                evaluation = self.minimax(child,depth-1,alpha,beta)
                 min_eval = min(evaluation,min_eval)
                 beta = min(beta,evaluation)
                 if beta <= alpha:
@@ -199,12 +199,14 @@ class Player:
         -------
         integer corresponding to the column of the board where you want to drop your disc.
         """
+        self.board = board
         search_root = TreeNode(board)
+        search_root.make_children(self.color)
         self.minimax(search_root,6,-99999,99999)
         max_val = -99999
         max_index = -1
         for i in range(self.cols):
-            if search_root.children[i].value > max_val:
+            if search_root.children[i].value > max_val and board[0][i] == 0:
                 max_val = search_root.children[i].value
                 max_index = i
         return max_index
