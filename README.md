@@ -1,41 +1,73 @@
 # Connect 4 Game
 
-![Game Animation](https://upload.wikimedia.org/wikipedia/commons/a/ad/Connect_Four.gif)
+## Heuristic
 
+As disscussed in class, 2-connect, 3-connect, 4-connect, 5-connect should all different weights. Whereas 5-connect should have a significantly larger weight since the player wins the game in such case. The weight used for search is 1,3,6,500 respectively. Also, it is added by 2 times number of possible 5-connect by counting empty and player grid as connected, such that the program will less likely to run into dead 4-connects. In brief, the heuristic function is as below:
 
-This repository contains code for the Connect 4 game. It provides the interface for each player to program game logic, and then for players to be pitted against each other. 
+h = 2-connect + 3 * 3-connect + 6 * 4-connect + 500 * 5-connect + 2 * possible-5-connect 
 
-## Rules
+## Classes and Functions
 
-1. The board is a 6-row, 7-column grid erected vertically.
-2. Each column is a shaft, such that a piece dropped in a column will fall to the bottom (or on top of the previous piece.)
-3. Players take turns choosing which column to drop their piece in.
-4. The objective of the game is to drop pieces such that and 4 of your pieces are connected horizintally, vertically, or diagonally first.
-5. If there are no more empty spots left, and no player has connected 4 of their pieces, the game is a draw.
+### TreeNode Class
 
+TreeNode Class is used to store the board information at each step, as well as some extra parameters reserved for minimax search. 
 
-## Variations of the Game
-The board can be configured for any number of columns and rows, as well as the number of disks you have to connect to win the game. In addition, a cylinder option is available, connecting the left-hand side of the board to the right-hand side.
+Attributes: board(board of current state), value(stores the evaluation after minimax search is completed), parent(stores the parent), isMAX(used in minimax search to determine use minimum or maximum), children(an array that stores the children).
 
+#### \_\_init\_\_
 
-## Installing
-The code requires python=3.9 numpy. You can pip install or conda install these packages. It is recommended to use a virtual environment.
+Initialize a TreeNode with board, possibly with value, parent, or isMAX.
 
-## Interface
-This repository provides the Player class which includes their game logic. It is in turn used by the Connect4Board class to run the game.
+#### drop\_piece (Helper function/ Not supposed to be called outside of class)
 
-The Player class has two methods which may be overridden:
+This is a helper function for make\_children. It takes in a board, a column number, and player and drop a player token into the corresponding column, and return the new board.
 
-setup() is called at the beginning of the game, and may be used to set up any game logic (loading stuff etc.). It is a timed method, and taking too long will cause the player to lose by default.
-play(self, board: np.ndarray) -> int takes the current state of the board, and returns the column index to put the piece in. If the move is invalid, the player loses by default. A move is invalid if the column index is out of bounds, or if the column has no more space left.
-When writing up your player, you may subclass the Player class, or write your own, but with these method signatures.
+#### make\_children
 
-The Connect4Board class plays matches between two players. It has the play(p1, p2) -> str, str, list[int] method that returns the winner, reason for win, and the list of moves as a list of column indices.
+This is to be called after initialization. It takes in the player (either +1 or -1), and make 1 child for each column
 
-p1, p2 are the string names of the modules containing the player object.
+### Player Class
 
-* If you have your own Player class in a file myplayer.py in the working directory, you can simply pass myplayer.
-* If your player is named something else, then specify the class name like myplayer/Playa
-* If the player is in a nested module. For example if you'd need to write from players.simple import Dumbo, then specify the player as players.simple/Dumbo.
+Player Class is the main body of minimax search. It contains all the searching algorithms and information needed for the search
 
-A Jupiter Notebook, play.ipynb, is provided along with some dummy players to learn how to use the Connect4Board class to set up a game between two players.
+Attributes: rows, cols, connect\_number, timeout\_setup, timeout\_move, max\_invalid\_moves, cylinder, color(+1 or -1)
+
+#### \_\_init\_\_
+
+Take in attributes from game class
+
+#### setup
+
+To be called after \_\_init\_\_ by game class to specify piece color (+1 or -1)
+
+#### column\_is\_full (Helper function/ Not supposed to be called outside of class)
+
+Given a board and a column, return if the column is full
+
+#### check\_direction (Helper function/ Not supposed to be called outside of class)
+
+Given a board, column, row, direction, and player, return the number of connection in the specified direction (5 max)
+
+#### check\_direction\_lenient (Helper function/ Not supposed to be called outside of class)
+
+Similar to check\_direction, but counts empty spots as connected
+
+#### count\_connect (Helper function/ Not supposed to be called outside of class)
+
+Count number of connects and adjust result (because multiple counts may occur) on the board, return an array contains the count
+
+#### count\_connect\_lenient (Helper function/ Not supposed to be called outside of class)
+
+Similar to count\_connect, but counts empty spots as connected
+
+#### evaluate (Helper function/ Not supposed to be called outside of class)
+
+Given a board, use current player color to calculate the heristic
+
+#### minimax (Helper function/ Not supposed to be called outside of class)
+
+Recursive function. Use minimax searching with alpha and beta pruning, cutting unnecessary branches. Parameters include node(call using root with children initialized), depth(call using maximum search depth), alpha(call using minimum number), and beta(call using maximum number), return evaluation value and update TreeNode
+
+#### play
+
+Driver function for the search, takes in a board, update player with the board, call minimax function and return the best index. Currenly use search depth = 6.
