@@ -12,7 +12,7 @@ CYLINDER=False
 timed_out = False 
 
 # [2-connect,3-connect,4-connect,5-connect,lenient-5-connect]
-EVAL_WEIGHT = [1,3,6,80,6]
+EVAL_WEIGHT = [1,3,6,500,2]
 
 
 class TreeNode:
