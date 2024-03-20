@@ -1,4 +1,4 @@
-# Connect 4 Game
+# Connect 5 Game
 
 ## Heuristic (Alpha-Beta Pruning Search)
 
