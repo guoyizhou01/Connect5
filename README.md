@@ -32,6 +32,8 @@ Player Class is the main body of minimax search. It contains all the searching a
 
 Attributes: rows, cols, connect\_number, timeout\_setup, timeout\_move, max\_invalid\_moves, cylinder, color(+1 or -1)
 
+If the function is marked with (P), it is helper function and is not supposed to be called outside the class
+
 #### \_\_init\_\_
 
 Take in attributes from game class
@@ -40,31 +42,31 @@ Take in attributes from game class
 
 To be called after \_\_init\_\_ by game class to specify piece color (+1 or -1)
 
-#### column\_is\_full (Helper function/ Not supposed to be called outside of class)
+#### column\_is\_full(P)
 
 Given a board and a column, return if the column is full
 
-#### check\_direction (Helper function/ Not supposed to be called outside of class)
+#### check\_direction(P)
 
 Given a board, column, row, direction, and player, return the number of connection in the specified direction (5 max)
 
-#### check\_direction\_lenient (Helper function/ Not supposed to be called outside of class)
+#### check\_direction\_lenient(P)
 
 Similar to check\_direction, but counts empty spots as connected
 
-#### count\_connect (Helper function/ Not supposed to be called outside of class)
+#### count\_connect(P)
 
 Count number of connects and adjust result (because multiple counts may occur) on the board, return an array contains the count
 
-#### count\_connect\_lenient (Helper function/ Not supposed to be called outside of class)
+#### count\_connect\_lenient(P)
 
 Similar to count\_connect, but counts empty spots as connected
 
-#### evaluate (Alpha-Beta Pruning Search) (Helper function/ Not supposed to be called outside of class)
+#### evaluate(P) (Alpha-Beta Pruning Search)
 
 Given a board, use current player color to calculate the heristic
 
-#### minimax (Alpha-Beta Pruning Search) (Helper function/ Not supposed to be called outside of class)
+#### minimax(P) (Alpha-Beta Pruning Search)
 
 Recursive function. Use minimax searching with alpha and beta pruning, cutting unnecessary branches. Parameters include node(call using root with children initialized), depth(call using maximum search depth), alpha(call using minimum number), and beta(call using maximum number), return evaluation value and update TreeNode
 
@@ -72,27 +74,27 @@ Recursive function. Use minimax searching with alpha and beta pruning, cutting u
 
 Driver function for the search, takes in a board, update player with the board, call minimax function and return the best index. Currenly use search depth = 4 to keep running time less than 1 second.
 
-#### drop\_piece (Monte-Carlo Tree Search) (Helper function/ Not supposed to be called outside of class)
+#### drop\_piece(P) (Monte-Carlo Tree Search)
 
 Same as in TreeNode Class
 
-#### check\_win (Monte-Carlo Tree Search) (Helper function/ Not supposed to be called outside of class)
+#### check\_win(P) (Monte-Carlo Tree Search)
 
 Given a player and the board, check if the player has won the game
 
-#### board\_is\_full (Monte-Carlo Tree Search) (Helper function/ Not supposed to be called outside of class)
+#### board\_is\_full(P) (Monte-Carlo Tree Search)
 
 Given a board, check if the board is full (and result in a tie when none of the players won)
 
-#### run\_instance (Monte-Carlo Tree Search) (Helper function/ Not supposed to be called outside of class)
+#### run\_instance(P) (Monte-Carlo Tree Search)
 
 Run a single instance of MCTS. Randomly drop pieces until some player win or the board is full
 
-#### evaluate (Monte-Carlo Tree Search) (Helper function/ Not supposed to be called outside of class)
+#### evaluate(P) (Monte-Carlo Tree Search)
 
 Given a board, run MCTS on given board until time restriction is reached
 
-#### minimax (Monte-Carlo Tree Search) (Helper function/ Not supposed to be called outside of class)
+#### minimax(P) (Monte-Carlo Tree Search)
 
 Although called minimax, it actually only runs 1 layer, which is the maximum layer. It calls evaluate function to run MCTS for each column
 
