@@ -1,6 +1,7 @@
 import numpy as np
 import importlib
 import random
+import sys, os, traceback
 
 from contextlib import contextmanager
 import threading
@@ -200,6 +201,7 @@ class Connect4Board():
                     self.move = p1_cls.play(p1_board.copy())
                 is_valid, p1_board = self.process_move(self.move, p1_board.copy())
             except Exception as exc:
+                print(traceback.format_exc())
                 is_valid=False
                 print(f"Error {exc} has occurred with player {p1}:")
             if  is_valid:
@@ -231,6 +233,7 @@ class Connect4Board():
                     self.move = p2_cls.play(p2_board.copy())
                 is_valid, p2_board = self.process_move(self.move, p2_board.copy())
             except Exception as exc:
+                print(traceback.format_exc())
                 is_valid=False
                 print(f"Error {exc} has occurred with player {p2}:")
             if is_valid:
