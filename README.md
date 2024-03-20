@@ -1,6 +1,6 @@
 # Connect 4 Game
 
-## Heuristic
+## Heuristic (Alpha-Beta Pruning Search)
 
 As disscussed in class, 2-connect, 3-connect, 4-connect, 5-connect should all different weights. Whereas 5-connect should have a significantly larger weight since the player wins the game in such case. The weight used for search is 1,3,6,500 respectively. Also, it is added by 2 times number of possible 5-connect by counting empty and player grid as connected, such that the program will less likely to run into dead 4-connects. In brief, the heuristic function is as below:
 
@@ -60,14 +60,42 @@ Count number of connects and adjust result (because multiple counts may occur) o
 
 Similar to count\_connect, but counts empty spots as connected
 
-#### evaluate (Helper function/ Not supposed to be called outside of class)
+#### evaluate (Alpha-Beta Pruning Search) (Helper function/ Not supposed to be called outside of class)
 
 Given a board, use current player color to calculate the heristic
 
-#### minimax (Helper function/ Not supposed to be called outside of class)
+#### minimax (Alpha-Beta Pruning Search) (Helper function/ Not supposed to be called outside of class)
 
 Recursive function. Use minimax searching with alpha and beta pruning, cutting unnecessary branches. Parameters include node(call using root with children initialized), depth(call using maximum search depth), alpha(call using minimum number), and beta(call using maximum number), return evaluation value and update TreeNode
 
-#### play
+#### play (Alpha-Beta Pruning Search)
 
-Driver function for the search, takes in a board, update player with the board, call minimax function and return the best index. Currenly use search depth = 6.
+Driver function for the search, takes in a board, update player with the board, call minimax function and return the best index. Currenly use search depth = 4 to keep running time less than 1 second.
+
+#### drop\_piece (Monte-Carlo Tree Search) (Helper function/ Not supposed to be called outside of class)
+
+Same as in TreeNode Class
+
+#### check\_win (Monte-Carlo Tree Search) (Helper function/ Not supposed to be called outside of class)
+
+Given a player and the board, check if the player has won the game
+
+#### board\_is\_full (Monte-Carlo Tree Search) (Helper function/ Not supposed to be called outside of class)
+
+Given a board, check if the board is full (and result in a tie when none of the players won)
+
+#### run\_instance (Monte-Carlo Tree Search) (Helper function/ Not supposed to be called outside of class)
+
+Run a single instance of MCTS. Randomly drop pieces until some player win or the board is full
+
+#### evaluate (Monte-Carlo Tree Search) (Helper function/ Not supposed to be called outside of class)
+
+Given a board, run MCTS on given board until time restriction is reached
+
+#### minimax (Monte-Carlo Tree Search) (Helper function/ Not supposed to be called outside of class)
+
+Although called minimax, it actually only runs 1 layer, which is the maximum layer. It calls evaluate function to run MCTS for each column
+
+#### play (Monte-Carlo Tree Search)
+
+Driver function for the search, takes in a board, update player with the board, run MCTS and return the best index. Use depth=1 to run MCTS without alpha-beta pruning search.
