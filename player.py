@@ -1,4 +1,6 @@
 import numpy as np
+import time
+import random
 # from anytree import Node, RenderTree
 
 ROWS, COLS = 7, 8
@@ -12,7 +14,7 @@ CYLINDER=False
 timed_out = False 
 
 # [2-connect,3-connect,4-connect,5-connect,lenient-5-connect]
-EVAL_WEIGHT = [1,3,6,500,2]
+EVAL_WEIGHT = [1,3,6,1000,1]
 
 
 class TreeNode:
@@ -79,7 +81,9 @@ class Player:
     def check_direction(self, player, c, r, dc, dr, board: np.ndarray):
         for i in range(5):
             # check if out of bound or is opponent/empty
-            if r+dr*i < 0 or c+dc*i < 0 or board[(r+dr*i)%self.rows][(c+dc*i)%self.cols] != player:
+            if r+dr*i < 0 or c+dc*i < 0 or  r+dr*i >= ROWS or board[(r+dr*i)][(c+dc*i)%self.cols] != player:
+                if r+dr*i < 0 or c+dc*i < 0 or r+dr*i >= ROWS or board[(r+dr*i)][(c+dc*i)%self.cols] == 1-player:
+                    return 0
                 return i
         return 5
 
@@ -89,9 +93,9 @@ class Player:
     def check_direction_lenient(self, player, c, r, dc, dr, board: np.ndarray):
         for i in range(5):
             # check if out of bound or is opponent
-            if r+dr*i < 0 or c+dc*i < 0 or (not board[(r+dr*i)%self.rows][(c+dc*i)%self.cols] != 0-player):
-                return i
-        return 5
+            if r+dr*i < 0 or c+dc*i < 0 or r+dr*i >= ROWS or (not board[(r+dr*i)][(c+dc*i)%self.cols] != 0-player):
+                return 0
+        return 1
 
     # count all connects of a given player
     # player = +1 or -1
@@ -121,41 +125,80 @@ class Player:
     # player = +1 or -1
     # return: an array with index 0 to 5 with count
     def count_connect_lenient(self,player,board: np.ndarray):
-        result = [0,0,0,0,0,0]
+        result = 0
         for i in range(self.rows):
             for j in range(self.cols):
                 # do not need to check all 8 directions
                 for dc,dr in DIRECTIONS[:4]:
                     # print('b',end=' ')
-                    result[self.check_direction_lenient(player,i,j,dc,dr,board)] += 1
+                    result += self.check_direction_lenient(player,i,j,dc,dr,board)
         # print(result,end=' ')
         return result
 
+    def drop_piece(self,board:np.ndarray,c,player):
+        result = ROWS
+        for i in range(ROWS):
+            if board[i][c] != 0:
+                result = i
+                break
+        if result > 0:
+            board[result-1][c] = player
+        return board
+
+    def check_win(self, board:np.ndarray, color):
+        return self.count_connect(color,board)[5] > 0
+
+    def board_is_full(self,board:np.ndarray):
+        for c in range(COLS):
+            if not self.column_is_full(c, board):
+                return False
+        return True
+
+    def run_instance(self, board: np.ndarray):
+        color = 0-self.color
+        new_board = board.copy()
+        while True:
+            random_col = random.randint(0, 7)
+            while self.column_is_full(random_col, new_board):
+                random_col = random.randint(0, 7)
+            self.drop_piece(new_board,random_col,color)
+            color = 0-color
+            if self.board_is_full(new_board):
+                # print(new_board)
+                return 0
+            if self.check_win(new_board,1):
+                return 1
+            if self.check_win(new_board,-1):
+                return -1
+        return 0
+
 
     def evaluate(self,board: np.ndarray):
-        eval_self = 0
-        connect_self = self.count_connect(self.color,board)
-        connect_lenient_self = self.count_connect_lenient(self.color,board)
-        eval_self += EVAL_WEIGHT[0]*connect_self[2] + EVAL_WEIGHT[1]*connect_self[3] + \
-                            EVAL_WEIGHT[2]*connect_self[4] + EVAL_WEIGHT[3]*connect_self[5] + EVAL_WEIGHT[3]*connect_lenient_self[5]
-
-        evel_opponent = 0
-        connect_opponent = self.count_connect(0-self.color,board)
-        connect_lenient_opponent = self.count_connect_lenient(0-self.color,board)
-        evel_opponent += EVAL_WEIGHT[0]*connect_opponent[2] + EVAL_WEIGHT[1]*connect_opponent[3] + \
-                            EVAL_WEIGHT[2]*connect_opponent[4] + EVAL_WEIGHT[3]*connect_opponent[5] + EVAL_WEIGHT[3]*connect_lenient_opponent[5]
-        # print(f'board: {self.board} \n  self: {connect_self}, {connect_lenient_self[5]}, opponent: {connect_opponent}, {connect_lenient_opponent[5]}')
-        return eval_self-evel_opponent
+        total_run = 0
+        win_loss = 0
+        start_time = time.time()
+        while (time.time()-start_time < self.timeout_move/15):
+        # while (total_run < 100):
+            total_run += 1
+            win_loss += self.run_instance(board)
+        # print(win_loss/total_run)
+        return win_loss/total_run
 
     def minimax(self, node, depth, alpha, beta):
         if depth == 0:
-            return self.evaluate(node.board)
+            node.value = self.evaluate(node.board)
+            return node.value
 
         if node.isMAX:
             max_eval = -99999
             for child in node.children:
                 child.make_children(1-self.color)
                 evaluation = self.minimax(child,depth-1,alpha,beta)
+                # if evaluation > 300:
+                #     evaluation = 999999
+                #     break
+                # if evaluation < -300:
+                #     evaluation = -999999
                 max_eval = max(evaluation,max_eval)
                 alpha = max(alpha,evaluation)
                 if beta <= alpha:
@@ -167,6 +210,11 @@ class Player:
             for child in node.children:
                 child.make_children(self.color)
                 evaluation = self.minimax(child,depth-1,alpha,beta)
+                # if evaluation > 300:
+                #     evaluation = 999999
+                # if evaluation < -300:
+                #     evaluation = -999999
+                #     break
                 min_eval = min(evaluation,min_eval)
                 beta = min(beta,evaluation)
                 if beta <= alpha:
@@ -202,8 +250,9 @@ class Player:
         self.board = board
         search_root = TreeNode(board)
         search_root.make_children(self.color)
-        self.minimax(search_root,6,-99999,99999)
-        max_val = -99999
+        # ONLY USE ODD NUMBER FOR MCTS
+        self.minimax(search_root,1,-99999,99999)
+        max_val = -999999
         max_index = -1
         for i in range(self.cols):
             if search_root.children[i].value > max_val and board[0][i] == 0:
